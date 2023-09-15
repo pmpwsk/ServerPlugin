@@ -23,9 +23,9 @@ Changelog: https://uwap.org/changes/server-plugin
 - Showing that the system needs to be rebooted after a system upgrade (requires Linux)
 
 ## Installation
-You can install this library to your WF project by downloading a .dll file or the source code and referencing it in your project file. In the future, there will be a NuGet package.
+You can add this plugin to your WF project by installing the NuGet package: [uwap.ServerPlugin](https://www.nuget.org/packages/uwap.ServerPlugin/)
 
-If you're using the source code, you will need to update the project reference to WebFramework according to where you have it. The reference will soon be replaced with a NuGet dependency so the library becomes smaller and you don't need to reference WF manually.
+You can also download the source code and reference it in your project file.
 
 Once installed, add the following things to your program start code:
 - Add <code>using uwap.WebFramework.Plugins;</code> to the top, otherwise you have to prepend it to <code>ServerPlugin</code>
