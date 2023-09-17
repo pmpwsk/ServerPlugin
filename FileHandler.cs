@@ -4,7 +4,7 @@ namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    public override byte[]? GetFile(string relPath, string pathPrefix)
+    public override byte[]? GetFile(string relPath, string pathPrefix, string domain)
     {
         string pluginHome = pathPrefix == "" ? "/" : pathPrefix;
         return relPath switch
