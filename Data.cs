@@ -19,7 +19,7 @@ public partial class ServerPlugin : Plugin
         return ips;
     }
 
-    private static void DeleteSshRules()
+    private static IEnumerable<string> DeleteSshRules()
     {
         var ips = AllowedSshIps();
         foreach (var ip in ips)
@@ -33,12 +33,13 @@ public partial class ServerPlugin : Plugin
             p.StandardOutput.ReadToEnd();
             p.WaitForExit();
         }
-        if (ips.Any()) Console.WriteLine($"SSH rules deleted for {string.Join(", ", ips)}");
+        return ips;
     }
 
-    private static void AllowSsh(IRequest req)
+    private static string AllowSsh(IRequest req)
     {
-        var ip = req.Context.IP(); if (ip == null) return;
+        var ip = req.Context.IP();
+        if (ip == null) return "unknown";
         Process process = new();
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
@@ -47,6 +48,6 @@ public partial class ServerPlugin : Plugin
         process.Start();
         process.StandardOutput.ReadToEnd();
         process.WaitForExit();
-        Console.WriteLine($"SSH allowed for {ip}");
+        return ip;
     }
 }
