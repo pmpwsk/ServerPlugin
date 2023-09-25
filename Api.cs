@@ -59,12 +59,12 @@ public partial class ServerPlugin : Plugin
                     request.Status = 400;
                     break;
                 }
-                var message = MailManager.Out.GenerateMessage(new(request.Query["from"], request.Query["from"]), new(request.Query["to"], request.Query["to"]), request.Query["subject"], request.Query["text"], true);
+                var message = MailManager.Out.GenerateMessage(new(request.Query["from"], request.Query["from"]), new(request.Query["to"], request.Query["to"]), request.Query["subject"], request.Query["text"], true, true);
                 var result = MailManager.Out.Send(message);
                 if (result.FromSelf != null)
-                    await request.WriteLine($"Self: {(result.FromSelf.Success ? "OK" : "FAIL")}");
+                    await request.WriteLine($"Self: {result.FromSelf.ResultType}");
                 if (result.FromBackup != null)
-                    await request.WriteLine($"Backup: {(result.FromBackup.Success ? "OK" : "FAIL")}");
+                    await request.WriteLine($"Backup: {result.FromBackup.ResultType}");
                 break;
             case "/ssh/enable":
                 {
