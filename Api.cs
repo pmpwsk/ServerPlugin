@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using MimeKit;
+using System.Diagnostics;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
 
@@ -59,8 +60,9 @@ public partial class ServerPlugin : Plugin
                     request.Status = 400;
                     break;
                 }
-                var message = MailManager.Out.GenerateMessage(new(request.Query["from"], request.Query["from"]), new(request.Query["to"], request.Query["to"]), request.Query["subject"], request.Query["text"], true, true);
-                var result = MailManager.Out.Send(message);
+                var result = MailManager.Out.Send(new MailGen(new(request.Query["from"], request.Query["from"]),
+                    request.Query["to"].Split(' ', ',', ';').Where(x => x != "").Select(x => new MailboxAddress(x, x)),
+                    request.Query["subject"], request.Query["text"], true));
                 if (result.FromSelf != null)
                     await request.WriteLine($"Self: {result.FromSelf.ResultType}");
                 if (result.FromBackup != null)
