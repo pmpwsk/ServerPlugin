@@ -30,15 +30,24 @@ public partial class ServerPlugin : Plugin
                 Server.Exit(false);
                 break;
             case "/ssh/allow":
-                AllowSsh(request);
-                break;
+                {
+                    string ip = AllowSsh(request);
+                    Console.WriteLine($"{request.User.Username} ({request.User.Id}) allowed SSH access to {ip}.");
+                } break;
             case "/ssh/change":
-                DeleteSshRules();
-                AllowSsh(request);
-                break;
+                {
+                    var ips = DeleteSshRules();
+                    string ip = AllowSsh(request);
+                    if (ips.Any())
+                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) changed SSH access from {Parsers.EnumerationText(ips)} to {ip}.");
+                    else Console.WriteLine($"{request.User.Username} ({request.User.Id}) allowed SSH access for {ip}.");
+                } break;
             case "/ssh/block":
-                DeleteSshRules();
-                break;
+                {
+                    var ips = DeleteSshRules();
+                    if (ips.Any())
+                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) removed SSH access for {Parsers.EnumerationText(ips)}.");
+                } break;
             case "/work":
                 Server.Work();
                 break;
