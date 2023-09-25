@@ -20,7 +20,9 @@ public partial class ServerPlugin : Plugin
                 await request.SendFile("../Wrapper.log");
                 break;
             case "/clear-log":
-                Console.WriteLine("wrapper log-clear");
+                if (AllowLogClearing)
+                    Console.WriteLine("wrapper log-clear");
+                else request.Status = 403;
                 break;
             case "/reload-config":
                 Console.WriteLine("wrapper reload-config");

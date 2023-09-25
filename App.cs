@@ -37,7 +37,8 @@ public partial class ServerPlugin : Plugin
                 }
                 e.Add(new ButtonElement("Log (raw)", null, $"/api{pathPrefix}/log", newTab: true));
                 e.Add(new ButtonElement("Log (UI)", null, $"{pathPrefix}/log"));
-                e.Add(new ButtonElement("Clear log", null, $"/api{pathPrefix}/clear-log", newTab: true));
+                if (AllowLogClearing)
+                    e.Add(new ButtonElement("Clear log", null, $"/api{pathPrefix}/clear-log", newTab: true));
                 e.Add(new ButtonElement("SSH management", null, $"{pathPrefix}/ssh"));
                 e.Add(new ContainerElement("Update file", new FileSelector("update-file")));
                 e.Add(new ButtonElementJS("Start update", null, "Update()", id: "updateButton"));
@@ -61,11 +62,10 @@ public partial class ServerPlugin : Plugin
                     foreach (string line in File.ReadAllLines("../Wrapper.log"))
                         contents.Add(new Paragraph(line.HtmlSafe()));
                 else contents.Add(new Paragraph("../Wrapper.log not found!"));
-                e.Add(new LargeContainerElement("Server log", contents) { Buttons = new List<IButton>
-                {
-                    (wide ? new Button("Normal", $"{pathPrefix}/log") : new Button("Wide", $"{pathPrefix}/log?wide=true")),
-                    new ButtonJS("Clear", "Clear()", "red")
-                } });
+                List<IButton> buttons = new() { wide ? new Button("Normal", $"{pathPrefix}/log") : new Button("Wide", $"{pathPrefix}/log?wide=true") };
+                if (AllowLogClearing)
+                    buttons.Add(new ButtonJS("Clear", "Clear()", "red"));
+                e.Add(new LargeContainerElement("Server log", contents) { Buttons = buttons });
                 break;
             case "/ssh":
                 {

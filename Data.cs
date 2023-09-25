@@ -4,6 +4,8 @@ namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
+    private bool AllowLogClearing;
+
     private static IEnumerable<string> AllowedSshIps()
     {
         Process process = new();
