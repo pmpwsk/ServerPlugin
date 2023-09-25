@@ -9,7 +9,7 @@ public partial class ServerPlugin : Plugin
 {
     public override async Task Handle(ApiRequest request, string path, string pathPrefix)
     {
-        if (!request.IsAdmin())
+        if (request.User == null || !request.IsAdmin())
         {
             request.Status = 403;
             return;
@@ -79,6 +79,7 @@ public partial class ServerPlugin : Plugin
                             File.Move(file + ".disabled", file, true);
                         else File.WriteAllText(file, "");
                         await request.Write("ok");
+                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) enabled SSH for {username}.");
                     }
                 }
                 break;
@@ -92,6 +93,7 @@ public partial class ServerPlugin : Plugin
                         if (File.Exists(file))
                             File.Move(file, file + ".disabled", true);
                         await request.Write("ok");
+                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) disabled SSH for {username}.");
                     }
                 }
                 break;
@@ -105,6 +107,7 @@ public partial class ServerPlugin : Plugin
                         string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
                         File.AppendAllLines(file, new[] { pk });
                         await request.Write("ok");
+                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) added a SSH key for {username}.");
                     }
                 }
                 break;
@@ -118,6 +121,7 @@ public partial class ServerPlugin : Plugin
                         string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
                         File.WriteAllLines(file, File.ReadAllLines(file).Where(x => x != pk));
                         await request.Write("ok");
+                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) removed a SSH key for {username}.");
                     }
                 }
                 break;
