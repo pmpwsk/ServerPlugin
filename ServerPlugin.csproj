@@ -7,7 +7,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>uwap.ServerPlugin</PackageId>
     <Title>ServerPlugin</Title>
-    <Version>1.4.3</Version>
+    <Version>1.4.3.1</Version>
     <Authors>pmpwsk</Authors>
     <Company>uwap.org</Company>
     <Description>Plugin for WebFramework that adds a simple interface to manage the program and server in general. </Description>
