@@ -73,7 +73,7 @@ public partial class ServerPlugin : Plugin
                 }
                 var result = MailManager.Out.Send(new MailGen(new(request.Query["from"], request.Query["from"]),
                     request.Query["to"].Split(' ', ',', ';').Where(x => x != "").Select(x => new MailboxAddress(x, x)),
-                    request.Query["subject"], request.Query["text"], true));
+                    request.Query["subject"], null, request.Query["text"]));
                 if (result.FromSelf != null)
                     await request.WriteLine($"Self: {result.FromSelf.ResultType}");
                 if (result.FromBackup != null)
