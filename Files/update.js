@@ -14,9 +14,9 @@ async function Update() {
             if (request.status === 200) {
                 window.location.reload();
             } else if (request.status === 418) {
-                alert("Invalid file!");
+                ShowError("Invalid file!");
             } else
-                alert("Error!");
+                ShowError("Error!");
             }
         }
     };
