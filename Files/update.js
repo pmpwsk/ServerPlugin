@@ -7,7 +7,6 @@ async function Update() {
     request.open('POST', '[PATH_PREFIX]/update');
     request.upload.addEventListener('progress', event => {
         document.querySelector('#updateButton').firstElementChild.innerText = 'Updating... ' + ((event.loaded / event.total) * 100).toFixed(2) + '%';
-        console.log();
     });
     request.onreadystatechange = () => {
         if (request.readyState == 4) {
