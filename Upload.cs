@@ -41,7 +41,7 @@ public partial class ServerPlugin : Plugin
                         if (File.Exists("../UpdateTemp/" + execName))
                         {
                             Directory.Move("../UpdateTemp", "../Update");
-                            Server.Exit(false); //update zip without subfolder
+                            //update zip without subfolder
                         }
                         else
                         {
@@ -52,12 +52,13 @@ public partial class ServerPlugin : Plugin
                                 Directory.Move(folders[0], "../UpdateTemp2");
                                 Directory.Delete("../UpdateTemp", true);
                                 Directory.Move("../UpdateTemp2", "../Update");
-                                Server.Exit(false); //update zip with subfolder
+                                //update zip with subfolder
                             }
                             else
                             {
                                 Directory.Delete("../UpdateTemp", true);
                                 request.Status = 418;
+                                break;
                             }
                         }
                     }
@@ -66,9 +67,16 @@ public partial class ServerPlugin : Plugin
                         Directory.CreateDirectory("../UpdateTemp");
                         file.Download("../UpdateTemp/" + file.FileName, 1073741824);
                         Directory.Move("../UpdateTemp", "../Update");
-                        Server.Exit(false); //update with single file
+                        //update with single file
                     }
-                    else request.Status = 418;
+                    else
+                    {
+                        request.Status = 418;
+                        break;
+                    }
+
+                    Console.WriteLine($"{request.User.Username} ({request.User.Id}) uploaded an update.");
+                    Server.Exit(false);
                 }
                 break;
             default:
