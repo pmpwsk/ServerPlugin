@@ -11,14 +11,22 @@ async function Update() {
     });
     request.onreadystatechange = () => {
         if (request.readyState == 4) {
-            if (request.status === 200) {
-                window.location.reload();
-            } else if (request.status === 418) {
-                document.querySelector('#updateButton').firstElementChild.innerText = 'Update';
-                ShowError("Invalid file!");
-            } else {
-                document.querySelector('#updateButton').firstElementChild.innerText = 'Update';
-                ShowError("Error!");
+            switch (request.status) {
+                case 200:
+                    window.location.reload();
+                    break;
+                case 418:
+                    document.querySelector('#updateButton').firstElementChild.innerText = 'Update';
+                    ShowError("Invalid file!");
+                    break;
+                case 503:
+                    document.querySelector('#updateButton').firstElementChild.innerText = 'Update';
+                    ShowError("This server can't be updated like this!");
+                    break;
+                default:
+                    document.querySelector('#updateButton').firstElementChild.innerText = 'Update';
+                    ShowError("Error!");
+                    break;
             }
         }
     };
