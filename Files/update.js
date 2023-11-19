@@ -1,4 +1,5 @@
 async function Update() {
+    HideError();
     let file = document.getElementById('update-file').files[0];
     let form = new FormData();
     form.append('file', file);
@@ -13,8 +14,10 @@ async function Update() {
             if (request.status === 200) {
                 window.location.reload();
             } else if (request.status === 418) {
+                document.querySelector('#updateButton').firstElementChild.innerText = 'Update';
                 ShowError("Invalid file!");
             } else {
+                document.querySelector('#updateButton').firstElementChild.innerText = 'Update';
                 ShowError("Error!");
             }
         }
