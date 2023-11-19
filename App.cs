@@ -41,6 +41,7 @@ public partial class ServerPlugin : Plugin
                     e.Add(new ButtonElement("Clear log", null, $"/api{pathPrefix}/clear-log", newTab: true));
                 e.Add(new ButtonElement("SSH management", null, $"{pathPrefix}/ssh"));
                 e.Add(new ContainerElement("Update file", new FileSelector("update-file")));
+                page.AddError();
                 e.Add(new ButtonElementJS("Start update", null, "Update()", id: "updateButton"));
                 e.Add(new ButtonElement("Call the worker", null, $"/api{pathPrefix}/work", newTab: true));
                 e.Add(new ButtonElement("Rollback version", null, $"/api{pathPrefix}/rollback", newTab: true));
