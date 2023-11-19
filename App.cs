@@ -57,12 +57,12 @@ public partial class ServerPlugin : Plugin
                 page.Scripts.Add(new Script(pathPrefix + "/log.js"));
                 if (wide)
                     page.Styles.Add(new CustomStyle("div.sidebar { display: none; } div.content { width: 100% !important; flex: 0 !important; } div.full { width: auto !important; display: block !important; margin: 0 0.6rem; !important }"));
-                List<IContent> contents = new();
+                List<IContent> contents = [];
                 if (File.Exists("../Wrapper.log"))
                     foreach (string line in File.ReadAllLines("../Wrapper.log"))
                         contents.Add(new Paragraph(line.HtmlSafe()));
                 else contents.Add(new Paragraph("../Wrapper.log not found!"));
-                List<IButton> buttons = new() { wide ? new Button("Normal", $"{pathPrefix}/log") : new Button("Wide", $"{pathPrefix}/log?wide=true") };
+                List<IButton> buttons = [wide ? new Button("Normal", $"{pathPrefix}/log") : new Button("Wide", $"{pathPrefix}/log?wide=true")];
                 if (AllowLogClearing)
                     buttons.Add(new ButtonJS("Clear", "Clear()", "red"));
                 e.Add(new LargeContainerElement("Server log", contents) { Buttons = buttons });
@@ -119,7 +119,7 @@ public partial class ServerPlugin : Plugin
                         }
                         try
                         {
-                            Dictionary<string, bool> users = new();
+                            Dictionary<string, bool> users = [];
                             foreach (var user in new DirectoryInfo("/home").GetDirectories("*", SearchOption.TopDirectoryOnly).Select(x => x.Name))
                             {
                                 if (File.Exists($"/home/{user}/.ssh/authorized_keys"))
@@ -132,15 +132,12 @@ public partial class ServerPlugin : Plugin
                                     users["root"] = false;
                             }
                             foreach (var user in users)
-                                e.Add(new ContainerElement(user.Key, "")
-                                {
-                                    Buttons = new()
-                            {
-                                new Button("More", $"{pathPrefix}/ssh?user=" + user.Key),
-                                user.Value?new ButtonJS("Disable", $"Disable('{user.Key}')", "red"):new ButtonJS("Enable", $"Enable('{user.Key}')", "green")
-                            }
-                                });
-                            if (!users.Any())
+                                e.Add(new ContainerElement(user.Key, "") { Buttons =
+                                [
+                                    new Button("More", $"{pathPrefix}/ssh?user=" + user.Key),
+                                    user.Value ? new ButtonJS("Disable", $"Disable('{user.Key}')", "red") : new ButtonJS("Enable", $"Enable('{user.Key}')", "green")
+                                ] });
+                            if (users.Count == 0)
                                 e.Add(new ContainerElement("No items!", "", "red"));
                         }
                         catch
@@ -153,8 +150,8 @@ public partial class ServerPlugin : Plugin
             case "/send-mail":
                 page.Title = "Send an email";
                 page.Scripts.Add(new Script(pathPrefix + "/send-mail.js"));
-                e.Add(new ContainerElement(null, new List<IContent>
-                {
+                e.Add(new ContainerElement(null,
+                [
                     new Heading("To:"),
                     new TextBox("Recipient...", null, "to", TextBoxRole.Email),
                     new Heading("From:"),
@@ -163,7 +160,7 @@ public partial class ServerPlugin : Plugin
                     new TextBox("Subject...", null, "subject", TextBoxRole.Email),
                     new Heading("Text:"),
                     new TextArea("Body...", null, "text", 10)
-                }));
+                ]));
                 e.Add(new ButtonElementJS("Send", null, "Send()"));
                 page.AddError();
                 break;

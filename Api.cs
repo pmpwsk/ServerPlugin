@@ -9,7 +9,7 @@ public partial class ServerPlugin : Plugin
 {
     public override async Task Handle(ApiRequest request, string path, string pathPrefix)
     {
-        if (request.User == null || !request.IsAdmin())
+        if (!request.IsAdmin())
         {
             request.Status = 403;
             return;
@@ -66,18 +66,20 @@ public partial class ServerPlugin : Plugin
                 MailManager.In.Restart();
                 break;
             case "/send-mail":
-                if (!request.Query.ContainsKeys("to", "from", "subject", "text"))
                 {
-                    request.Status = 400;
-                    break;
+                    if (request.Query.TryGetValue("to", out var to) && request.Query.TryGetValue("from", out var from)
+                        && request.Query.TryGetValue("subject", out var subject) && request.Query.TryGetValue("text", out var text))
+                    {
+                        var result = MailManager.Out.Send(new MailGen(new(from, from),
+                            to.Split(' ', ',', ';').Where(x => x != "").Select(x => new MailboxAddress(x, x)),
+                            subject, null, text));
+                        if (result.FromSelf != null)
+                            await request.WriteLine($"Self: {result.FromSelf.ResultType}");
+                        if (result.FromBackup != null)
+                            await request.WriteLine($"Backup: {result.FromBackup.ResultType}");
+                    }
+                    else request.Status = 400;
                 }
-                var result = MailManager.Out.Send(new MailGen(new(request.Query["from"], request.Query["from"]),
-                    request.Query["to"].Split(' ', ',', ';').Where(x => x != "").Select(x => new MailboxAddress(x, x)),
-                    request.Query["subject"], null, request.Query["text"]));
-                if (result.FromSelf != null)
-                    await request.WriteLine($"Self: {result.FromSelf.ResultType}");
-                if (result.FromBackup != null)
-                    await request.WriteLine($"Backup: {result.FromBackup.ResultType}");
                 break;
             case "/ssh/enable":
                 {
