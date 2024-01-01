@@ -10,6 +10,7 @@ public partial class ServerPlugin : Plugin
     {
         Presets.CreatePage(request, "Server", out var page, out var e);
         Presets.Navigation(request, page);
+        page.Head.Add($"<link rel=\"manifest\" href=\"{pathPrefix}/manifest.json\" />");
         if (!request.IsAdmin())
         {
             request.Status = 403;
