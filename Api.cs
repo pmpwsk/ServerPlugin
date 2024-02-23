@@ -138,6 +138,14 @@ public partial class ServerPlugin : Plugin
                     }
                 }
                 break;
+            case "/backups/list":
+                if (!AllowBackupManagement)
+                {
+                    request.Status = 403;
+                    break;
+                }
+                await request.Write(string.Join('\n', new DirectoryInfo(Server.Config.Backup.Directory).GetDirectories("*", SearchOption.TopDirectoryOnly).Where(d => long.TryParse(d.Name, out _)).Select(d => d.Name)));
+                break;
             case "/backups/new":
                 if (!AllowBackupManagement)
                 {
