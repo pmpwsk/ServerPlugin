@@ -138,6 +138,27 @@ public partial class ServerPlugin : Plugin
                     }
                 }
                 break;
+            case "/backups/restore":
+                if (!AllowBackupManagement)
+                {
+                    request.Status = 403;
+                    break;
+                }
+                else
+                {
+                    if ((!request.Query.TryGetValue("id", out var id)) || !long.TryParse(id, out _))
+                    {
+                        request.Status = 400;
+                        break;
+                    }
+                    if (!Directory.Exists($"{Server.Config.Backup.Directory}{id}"))
+                    {
+                        request.Status = 404;
+                        break;
+                    }
+                    await Server.Restore(id);
+                }
+                break;
             default:
                 request.Status = 404;
                 break;
