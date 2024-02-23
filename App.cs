@@ -45,6 +45,8 @@ public partial class ServerPlugin : Plugin
                 e.Add(new ContainerElement("Update file", new FileSelector("update-file")));
                 page.AddError();
                 e.Add(new ButtonElementJS("Start update", null, "Update()", id: "updateButton"));
+                if (AllowBackupManagement)
+                    e.Add(new ButtonElement("Backups", null, $"{pathPrefix}/backups"));
                 e.Add(new ButtonElement("Call the worker", null, $"/api{pathPrefix}/work", newTab: true));
                 e.Add(new ButtonElement("Rollback version", null, $"/api{pathPrefix}/rollback", newTab: true));
                 e.Add(new ButtonElement("Stop program", null, $"/api{pathPrefix}/stop", newTab: true));
