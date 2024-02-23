@@ -138,6 +138,22 @@ public partial class ServerPlugin : Plugin
                     }
                 }
                 break;
+            case "/backups/new":
+                if (!AllowBackupManagement)
+                {
+                    request.Status = 403;
+                    break;
+                }
+                else
+                {
+                    if ((!request.Query.TryGetValue("fresh", out var freshString)) || !bool.TryParse(freshString, out bool fresh))
+                    {
+                        request.Status = 400;
+                        break;
+                    }
+                    await Server.BackupNow(fresh);
+                }
+                break;
             case "/backups/restore":
                 if (!AllowBackupManagement)
                 {
