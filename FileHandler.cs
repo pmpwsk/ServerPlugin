@@ -5,6 +5,7 @@ public partial class ServerPlugin : Plugin
     public override byte[]? GetFile(string relPath, string pathPrefix, string domain)
         => relPath switch
         {
+            "/backup.js" => System.Text.Encoding.UTF8.GetBytes($"async function BackupNow(fresh) {{\r\n    var warning = document.querySelector(\"#backup-running\");\r\n    warning.style.removeProperty(\"display\");\r\n    try {{\r\n        let response = await fetch(\"/api{pathPrefix}/backups/new?fresh=\" + fresh);\r\n        if (response.status === 200) {{\r\n            window.location.reload();\r\n            return;\r\n        }}\r\n    }} catch {{\r\n    }}\r\n    warning.style[\"display\"] = \"none\";\r\n    ShowError(\"Connection failed.\");\r\n}}\r\n\r\nasync function Restore(id) {{\r\n    var btn = document.querySelector(\"#restore-\" + id);\r\n    if (btn.innerText === \"Restore...\")\r\n        return;\r\n    if (btn.innerText !== \"Restore?\") {{\r\n        btn.innerText = \"Restore?\";\r\n        return;\r\n    }}\r\n    btn.innerText = \"Restore...\";\r\n    try {{\r\n        let response = await fetch(\"/api{pathPrefix}/backups/restore?id=\" + id);\r\n        if (response.status === 200) {{\r\n            window.location.reload();\r\n            return;\r\n        }}\r\n    }} catch {{\r\n    }}\r\n    btn.innerText = \"Restore :(\";\r\n    ShowError(\"Connection failed.\");\r\n}}"),
             "/icon.ico" => ServerPluginBeta.Properties.PluginFiles.L2ljb24uaWNv,
             "/icon.png" => ServerPluginBeta.Properties.PluginFiles.L2ljb24ucG5n,
             "/icon.svg" => ServerPluginBeta.Properties.PluginFiles.L2ljb24uc3Zn,
@@ -20,15 +21,16 @@ public partial class ServerPlugin : Plugin
     public override string? GetFileVersion(string relPath)
         => relPath switch
         {
-            "/icon.ico" => "638397394019998038",
-            "/icon.png" => "638397393153008331",
-            "/icon.svg" => "638397393023821319",
+            "/backup.js" => "638440765939758391",
+            "/icon.ico" => "638397394010000000",
+            "/icon.png" => "638397393150000000",
+            "/icon.svg" => "638397393020000000",
             "/log.js" => "638295559870000000",
-            "/manifest.json" => "638397493935009237",
+            "/manifest.json" => "638397493930000000",
             "/send-mail.js" => "638295523540000000",
             "/ssh-menu.js" => "638295561700000000",
             "/ssh-user.js" => "638295524140000000",
-            "/update.js" => "638360143751168591",
+            "/update.js" => "638360143750000000",
             _ => null
         };
 }
