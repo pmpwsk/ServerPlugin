@@ -174,4 +174,7 @@ public partial class ServerPlugin : Plugin
 
         return Task.CompletedTask;
     }
+
+    private static string DateTimeString(DateTime dt)
+        => $"{dt.DayOfWeek}, {dt.Year}/{dt.Month}/{dt.Day}, {dt.ToShortTimeString()}";
 }
