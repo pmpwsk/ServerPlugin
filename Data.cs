@@ -5,6 +5,7 @@ namespace uwap.WebFramework.Plugins;
 public partial class ServerPlugin : Plugin
 {
     private bool AllowLogClearing;
+    private bool AllowBackupManagement;
 
     private static IEnumerable<string> AllowedSshIps()
     {
