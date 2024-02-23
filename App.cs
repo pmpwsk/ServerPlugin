@@ -167,6 +167,48 @@ public partial class ServerPlugin : Plugin
                 e.Add(new ButtonElementJS("Send", null, "Send()"));
                 page.AddError();
                 break;
+            case "/backups":
+                {
+                    if (!AllowBackupManagement)
+                    {
+                        request.Status = 403;
+                        break;
+                    }
+                    page.Title = "Backups";
+                    page.Scripts.Add(new Script(pathPrefix + "/backup.js"));
+                    e.Add(new LargeContainerElement("A backup is being created!", "", "red", Server.BackupRunning ? null : "display: none", "backup-running"));
+                    if (Server.RestoreRunning)
+                        e.Add(new LargeContainerElement("A backup is being restored!", "", "red"));
+                    e.Add(new LargeContainerElement("Backups"));
+                    page.AddError();
+                    e.Add(new ContainerElement(null, "New:") { Buttons =
+                    [
+                        new ButtonJS("Normal", "BackupNow('false')", "green"),
+                        new ButtonJS("Fresh", "BackupNow('true')", "green")
+                    ] });
+                    SortedSet<DateTime> ids = [];
+                    foreach (var d in new DirectoryInfo(Server.Config.Backup.Directory).GetDirectories("*", SearchOption.TopDirectoryOnly))
+                        if (long.TryParse(d.Name, out var id))
+                            ids.Add(new DateTime(id));
+                    foreach (var id in ids.Reverse())
+                    {
+                        string type;
+                        try
+                        {
+                            type = File.ReadAllText($"{Server.Config.Backup.Directory}{id.Ticks}/BasedOn.txt") == "-" ? "Fresh" : "Based on previous";
+                        }
+                        catch
+                        {
+                            type = "Broken";
+                        }
+                        e.Add(new ContainerElement(DateTimeString(id) + " UTC", [ id.Ticks.ToString(), type ]) { Buttons =
+                        [
+                            new Button("Download", $"/dl{pathPrefix}/backup?id={id.Ticks}", newTab: true),
+                            new ButtonJS("Restore", $"Restore('{id.Ticks}')", "red", id: $"restore-{id.Ticks}")
+                        ] });
+                    }
+                }
+                break;
             default:
                 request.Status = 404;
                 break;
