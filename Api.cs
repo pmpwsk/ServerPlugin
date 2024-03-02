@@ -1,28 +1,26 @@
 ﻿using MimeKit;
-using System.Diagnostics;
-using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
 
 namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    public override async Task Handle(ApiRequest request, string path, string pathPrefix)
+    public override async Task Handle(ApiRequest req, string path, string pathPrefix)
     {
-        if (!request.IsAdmin())
+        if (!req.IsAdmin())
         {
-            request.Status = 403;
+            req.Status = 403;
             return;
         }
         switch (path)
         {
             case "/log":
-                await request.SendFile("../Wrapper.log");
+                await req.SendFile("../Wrapper.log");
                 break;
             case "/clear-log":
                 if (AllowLogClearing)
                     Console.WriteLine("wrapper log-clear");
-                else request.Status = 403;
+                else req.Status = 403;
                 break;
             case "/reload-config":
                 Console.WriteLine("wrapper reload-config");
@@ -33,28 +31,28 @@ public partial class ServerPlugin : Plugin
                 break;
             case "/ssh/allow":
                 {
-                    string ip = AllowSsh(request);
-                    Console.WriteLine($"{request.User.Username} ({request.User.Id}) allowed SSH access to {ip}.");
+                    string ip = AllowSsh(req);
+                    Console.WriteLine($"{req.User.Username} ({req.User.Id}) allowed SSH access to {ip}.");
                 } break;
             case "/ssh/change":
                 {
                     var ips = DeleteSshRules();
-                    string ip = AllowSsh(request);
+                    string ip = AllowSsh(req);
                     if (ips.Any())
-                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) changed SSH access from {Parsers.EnumerationText(ips)} to {ip}.");
-                    else Console.WriteLine($"{request.User.Username} ({request.User.Id}) allowed SSH access for {ip}.");
+                        Console.WriteLine($"{req.User.Username} ({req.User.Id}) changed SSH access from {Parsers.EnumerationText(ips)} to {ip}.");
+                    else Console.WriteLine($"{req.User.Username} ({req.User.Id}) allowed SSH access for {ip}.");
                 } break;
             case "/ssh/block":
                 {
                     var ips = DeleteSshRules();
                     if (ips.Any())
-                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) removed SSH access for {Parsers.EnumerationText(ips)}.");
+                        Console.WriteLine($"{req.User.Username} ({req.User.Id}) removed SSH access for {Parsers.EnumerationText(ips)}.");
                 } break;
             case "/work":
                 Server.Work();
                 break;
             case "/ip":
-                await request.Write(request.Context.IP() ?? "unknown");
+                await req.Write(req.Context.IP() ?? "unknown");
                 break;
             case "/stop":
                 Server.Exit(true);
@@ -67,96 +65,105 @@ public partial class ServerPlugin : Plugin
                 break;
             case "/send-mail":
                 {
-                    if (request.Query.TryGetValue("to", out var to) && request.Query.TryGetValue("from", out var from)
-                        && request.Query.TryGetValue("subject", out var subject) && request.Query.TryGetValue("text", out var text))
+                    if (req.Query.TryGetValue("to", out var to) && req.Query.TryGetValue("from", out var from)
+                        && req.Query.TryGetValue("subject", out var subject) && req.Query.TryGetValue("text", out var text))
                     {
                         var result = MailManager.Out.Send(new MailGen(new(from, from),
                             to.Split(' ', ',', ';').Where(x => x != "").Select(x => new MailboxAddress(x, x)),
                             subject, null, text));
                         if (result.FromSelf != null)
-                            await request.WriteLine($"Self: {result.FromSelf.ResultType}");
+                            await req.WriteLine($"Self: {result.FromSelf.ResultType}");
                         if (result.FromBackup != null)
-                            await request.WriteLine($"Backup: {result.FromBackup.ResultType}");
+                            await req.WriteLine($"Backup: {result.FromBackup.ResultType}");
                     }
-                    else request.Status = 400;
+                    else req.Status = 400;
                 }
                 break;
             case "/ssh/enable":
                 {
-                    if (!request.Query.TryGetValue("user", out var username)) request.Status = 400;
-                    else if (username.Contains("..")) request.Status = 400;
+                    if (!req.Query.TryGetValue("user", out var username))
+                        req.Status = 400;
+                    else if (username.Contains(".."))
+                        req.Status = 400;
                     else
                     {
                         string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
                         if (File.Exists(file + ".disabled"))
                             File.Move(file + ".disabled", file, true);
                         else File.WriteAllText(file, "");
-                        await request.Write("ok");
-                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) enabled SSH for {username}.");
+                        await req.Write("ok");
+                        Console.WriteLine($"{req.User.Username} ({req.User.Id}) enabled SSH for {username}.");
                     }
                 }
                 break;
             case "/ssh/disable":
                 {
-                    if (!request.Query.TryGetValue("user", out var username)) request.Status = 400;
-                    else if (username.Contains("..")) request.Status = 400;
+                    if (!req.Query.TryGetValue("user", out var username))
+                        req.Status = 400;
+                    else if (username.Contains(".."))
+                        req.Status = 400;
                     else
                     {
                         string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
                         if (File.Exists(file))
                             File.Move(file, file + ".disabled", true);
-                        await request.Write("ok");
-                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) disabled SSH for {username}.");
+                        await req.Write("ok");
+                        Console.WriteLine($"{req.User.Username} ({req.User.Id}) disabled SSH for {username}.");
                     }
                 }
                 break;
             case "/ssh/add":
                 {
-                    if (!request.Query.TryGetValue("user", out var username)) request.Status = 400;
-                    else if (username.Contains("..")) request.Status = 400;
-                    else if (!request.Query.TryGetValue("pk", out var pk)) request.Status = 400;
+                    if (!req.Query.TryGetValue("user", out var username))
+                        req.Status = 400;
+                    else if (username.Contains(".."))
+                        req.Status = 400;
+                    else if (!req.Query.TryGetValue("pk", out var pk))
+                        req.Status = 400;
                     else
                     {
                         string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
-                        File.AppendAllLines(file, new[] { pk });
-                        await request.Write("ok");
-                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) added a SSH key for {username}.");
+                        File.AppendAllLines(file, [pk]);
+                        await req.Write("ok");
+                        Console.WriteLine($"{req.User.Username} ({req.User.Id}) added a SSH key for {username}.");
                     }
                 }
                 break;
             case "/ssh/delete":
                 {
-                    if (!request.Query.TryGetValue("user", out var username)) request.Status = 400;
-                    else if (username.Contains("..")) request.Status = 400;
-                    else if (!request.Query.TryGetValue("pk", out var pk)) request.Status = 400;
+                    if (!req.Query.TryGetValue("user", out var username))
+                        req.Status = 400;
+                    else if (username.Contains("..")) req.Status = 400;
+                    else if (!req.Query.TryGetValue("pk", out var pk))
+                        req.Status = 400;
                     else
                     {
                         string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
                         File.WriteAllLines(file, File.ReadAllLines(file).Where(x => x != pk));
-                        await request.Write("ok");
-                        Console.WriteLine($"{request.User.Username} ({request.User.Id}) removed a SSH key for {username}.");
+                        await req.Write("ok");
+                        Console.WriteLine($"{req.User.Username} ({req.User.Id}) removed a SSH key for {username}.");
                     }
                 }
                 break;
             case "/backups/list":
                 if (!AllowBackupManagement)
                 {
-                    request.Status = 403;
+                    req.Status = 403;
                     break;
                 }
-                await request.Write(string.Join('\n', new DirectoryInfo(Server.Config.Backup.Directory).GetDirectories("*", SearchOption.TopDirectoryOnly).Where(d => long.TryParse(d.Name, out _)).Select(d => d.Name)));
+                await req.Write(string.Join('\n', new DirectoryInfo(Server.Config.Backup.Directory).GetDirectories("*", SearchOption.TopDirectoryOnly).Where(d => long.TryParse(d.Name, out _)).Select(d => d.Name)));
                 break;
             case "/backups/new":
                 if (!AllowBackupManagement)
                 {
-                    request.Status = 403;
+                    req.Status = 403;
                     break;
                 }
                 else
                 {
-                    if ((!request.Query.TryGetValue("fresh", out var freshString)) || !bool.TryParse(freshString, out bool fresh))
+                    if ((!req.Query.TryGetValue("fresh", out var freshString)) || !bool.TryParse(freshString, out bool fresh))
                     {
-                        request.Status = 400;
+                        req.Status = 400;
                         break;
                     }
                     await Server.BackupNow(fresh);
@@ -165,26 +172,26 @@ public partial class ServerPlugin : Plugin
             case "/backups/restore":
                 if (!AllowBackupManagement)
                 {
-                    request.Status = 403;
+                    req.Status = 403;
                     break;
                 }
                 else
                 {
-                    if ((!request.Query.TryGetValue("id", out var id)) || !long.TryParse(id, out _))
+                    if ((!req.Query.TryGetValue("id", out var id)) || !long.TryParse(id, out _))
                     {
-                        request.Status = 400;
+                        req.Status = 400;
                         break;
                     }
                     if (!Directory.Exists($"{Server.Config.Backup.Directory}{id}"))
                     {
-                        request.Status = 404;
+                        req.Status = 404;
                         break;
                     }
                     await Server.Restore(id);
                 }
                 break;
             default:
-                request.Status = 404;
+                req.Status = 404;
                 break;
         }
     }

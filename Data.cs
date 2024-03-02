@@ -4,8 +4,8 @@ namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    private bool AllowLogClearing;
-    private bool AllowBackupManagement;
+    private readonly bool AllowLogClearing;
+    private readonly bool AllowBackupManagement;
 
     private static IEnumerable<string> AllowedSshIps()
     {
@@ -42,7 +42,8 @@ public partial class ServerPlugin : Plugin
     private static string AllowSsh(IRequest req)
     {
         var ip = req.Context.IP();
-        if (ip == null) return "unknown";
+        if (ip == null)
+            return "unknown";
         Process process = new();
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;

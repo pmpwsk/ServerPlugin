@@ -5,11 +5,11 @@ namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    public override Task Handle(UploadRequest request, string path, string pathPrefix)
+    public override Task Handle(UploadRequest req, string path, string pathPrefix)
     {
-        if (!request.IsAdmin())
+        if (!req.IsAdmin())
         {
-            request.Status = 403;
+            req.Status = 403;
             return Task.CompletedTask;
         }
         switch (path)
@@ -20,19 +20,19 @@ public partial class ServerPlugin : Plugin
                         Directory.Delete("../Update", true);
                     if (Directory.Exists("../UpdateTemp"))
                         Directory.Delete("../UpdateTemp", true);
-                    if (request.Files.Count != 1)
+                    if (req.Files.Count != 1)
                     {
-                        request.Status = 400;
+                        req.Status = 400;
                         break;
                     }
                     string? execName = Process.GetCurrentProcess().MainModule?.FileName;
                     if (execName == null)
                     {
-                        request.Status = 503;
+                        req.Status = 503;
                         break;
                     }
                     execName = execName.Split('/', '\\').Last();
-                    var file = request.Files[0];
+                    var file = req.Files[0];
                     if (file.FileName.EndsWith(".zip"))
                     {
                         file.Download("../UpdateTemp.zip", 1073741824);
@@ -57,7 +57,7 @@ public partial class ServerPlugin : Plugin
                             else
                             {
                                 Directory.Delete("../UpdateTemp", true);
-                                request.Status = 418;
+                                req.Status = 418;
                                 break;
                             }
                         }
@@ -71,16 +71,16 @@ public partial class ServerPlugin : Plugin
                     }
                     else
                     {
-                        request.Status = 418;
+                        req.Status = 418;
                         break;
                     }
 
-                    Console.WriteLine($"{request.User.Username} ({request.User.Id}) uploaded an update.");
+                    Console.WriteLine($"{req.User.Username} ({req.User.Id}) uploaded an update.");
                     Server.Exit(false);
                 }
                 break;
             default:
-                request.Status = 404;
+                req.Status = 404;
                 break;
         }
         return Task.CompletedTask;

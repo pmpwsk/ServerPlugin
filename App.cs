@@ -1,20 +1,19 @@
-﻿using uwap.WebFramework.Accounts;
-using uwap.WebFramework.Elements;
+﻿using uwap.WebFramework.Elements;
 using System.Web;
 
 namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    public override Task Handle(AppRequest request, string path, string pathPrefix)
+    public override Task Handle(AppRequest req, string path, string pathPrefix)
     {
-        Presets.CreatePage(request, "Server", out var page, out var e);
-        Presets.Navigation(request, page);
+        Presets.CreatePage(req, "Server", out var page, out var e);
+        Presets.Navigation(req, page);
         page.Head.Add($"<link rel=\"manifest\" href=\"{pathPrefix}/manifest.json\" />");
         page.Favicon = pathPrefix + "/icon.ico";
-        if (!request.IsAdmin())
+        if (!req.IsAdmin())
         {
-            request.Status = 403;
+            req.Status = 403;
             return Task.CompletedTask;
         }
         switch (path)
@@ -58,7 +57,7 @@ public partial class ServerPlugin : Plugin
                 break;
             case "/log":
                 page.Title = "Log";
-                bool wide = request.Query.TryGet("wide") == "true";
+                bool wide = req.Query.TryGet("wide") == "true";
                 page.Scripts.Add(new Script(pathPrefix + "/log.js"));
                 if (wide)
                     page.Styles.Add(new CustomStyle("div.sidebar { display: none; } div.content { width: 100% !important; flex: 0 !important; } div.full { width: auto !important; display: block !important; margin: 0 0.6rem; !important }"));
@@ -75,18 +74,18 @@ public partial class ServerPlugin : Plugin
             case "/ssh":
                 {
                     page.Title = "SSH";
-                    if (request.Query.TryGetValue("user", out string? username))
+                    if (req.Query.TryGetValue("user", out string? username))
                     {
                         if (username.Contains(".."))
                         {
-                            request.Status = 400;
+                            req.Status = 400;
                             break;
                         }
                         string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
                         bool enabled = File.Exists(file);
                         if ((!enabled) && (!File.Exists(file + ".disabled")))
                         {
-                            request.Status = 404;
+                            req.Status = 404;
                             break;
                         }
                         e.Add(new HeadingElement("SSH: " + username));
@@ -108,11 +107,11 @@ public partial class ServerPlugin : Plugin
                     else
                     {
                         page.Scripts.Add(new Script(pathPrefix + "/ssh-menu.js"));
-                        e.Add(new ContainerElement(null, "You are using IPv" + ((request.Context.IP() ?? ".").Contains('.') ? "4" : "6")));
+                        e.Add(new ContainerElement(null, "You are using IPv" + ((req.Context.IP() ?? ".").Contains('.') ? "4" : "6")));
                         try
                         {
                             var ips = AllowedSshIps();
-                            if (ips.Contains(request.Context.IP()))
+                            if (ips.Contains(req.Context.IP()))
                                 e.Add(new ButtonElementJS("Block SSH", null, "Block()", "red"));
                             else if (ips.Any())
                                 e.Add(new ButtonElementJS("Change SSH rule", null, "Change()", "red"));
@@ -173,7 +172,7 @@ public partial class ServerPlugin : Plugin
                 {
                     if (!AllowBackupManagement)
                     {
-                        request.Status = 403;
+                        req.Status = 403;
                         break;
                     }
                     page.Title = "Backups";
@@ -212,7 +211,7 @@ public partial class ServerPlugin : Plugin
                 }
                 break;
             default:
-                request.Status = 404;
+                req.Status = 404;
                 break;
         }
 
