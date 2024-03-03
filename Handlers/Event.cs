@@ -69,7 +69,8 @@ public partial class ServerPlugin : Plugin
                         }
 
                         countdown--;
-                        await Task.Delay(300);
+                        await req.Send(":keepalive");
+                        await Task.Delay(30000);
                     }
                 }
                 break;
