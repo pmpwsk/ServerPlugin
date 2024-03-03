@@ -49,6 +49,30 @@ public partial class ServerPlugin : Plugin
                     }
                 }
                 break;
+            case "/wrapper/log":
+                {
+                    if (!req.Query.TryGetValue("t", out long t))
+                        return;
+
+                    int countdown = 0;
+                    while (!req.Context.RequestAborted.IsCancellationRequested)
+                    {
+                        if (countdown == 0)
+                        {
+                            if (File.GetLastWriteTimeUtc("../Wrapper.log").Ticks != t)
+                            {
+                                await Task.Delay(2000);
+                                await req.Send("refresh");
+                                await req.KeepAlive();
+                            }
+                            countdown = 20;
+                        }
+
+                        countdown--;
+                        await Task.Delay(300);
+                    }
+                }
+                break;
             default:
                 req.Status = 404;
                 break;
