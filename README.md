@@ -12,7 +12,7 @@ Changelog: https://uwap.org/changes/server-plugin
 ## Main features
 - Log viewing and clearing (requires Wrapper with LogFile=Wrapper.log)
 - SSH management (requires Linux structure for key management, and ufw for port whitelisting)
-- Viewing your IP address from the server's perspective
+- Interface to list, download and restore backups, API to automatically download backups
 - Updating the program and requesting version rollbacks (requires Wrapper, rollbacks require CreateBackup=true)
 - Restarting and exiting the program (requires Wrapper)
 - Reloading the Wrapper configuration (requires Wrapper, obviously)
