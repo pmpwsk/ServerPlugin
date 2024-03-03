@@ -14,8 +14,13 @@ public partial class ServerPlugin : Plugin
         }
         switch (path)
         {
-            case "/update":
+            case "/wrapper/update":
                 {
+                    if (!EnableWrapper)
+                    {
+                        req.Status = 403;
+                        return Task.CompletedTask;
+                    }
                     if (Directory.Exists("../Update"))
                         Directory.Delete("../Update", true);
                     if (Directory.Exists("../UpdateTemp"))

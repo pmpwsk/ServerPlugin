@@ -1,5 +1,4 @@
 async function Clear() {
-    let response = await fetch('/api[PATH_PREFIX]/clear-log');
-    await response.text();
+    await fetch('/api[PATH_PREFIX]/wrapper/clear-log');
     window.location.reload();
 }

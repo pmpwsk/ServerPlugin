@@ -14,7 +14,7 @@ public partial class ServerPlugin : Plugin
         switch (path)
         {
             case "/backup":
-                if (!AllowBackupManagement)
+                if (!EnableBackups)
                 {
                     req.Status = 403;
                     break;
