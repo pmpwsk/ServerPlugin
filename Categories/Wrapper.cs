@@ -37,8 +37,11 @@ public partial class ServerPlugin : Plugin
                     page.Styles.Add(new CustomStyle("div.sidebar { display: none; } div.content { width: 100% !important; flex: 0 !important; } div.full { width: auto !important; display: block !important; margin: 0 0.6rem; !important }"));
                 List<IContent> contents = [];
                 if (File.Exists("../Wrapper.log"))
+                {
                     foreach (string line in File.ReadAllLines("../Wrapper.log"))
                         contents.Add(new Paragraph(line.HtmlSafe()));
+                    page.Scripts.Add(new CustomScript($"let logEvent = new EventSource('/event{pathPrefix}/wrapper/log?t={File.GetLastWriteTimeUtc("../Wrapper.log").Ticks}');\nonbeforeunload = (event) => {{ logEvent.close(); }};\nlogEvent.onmessage = function (event) {{\n\tif (event.data === 'refresh')\n\t\twindow.location.reload();\n}};"));
+                }
                 else contents.Add(new Paragraph("../Wrapper.log not found!"));
                 List<IButton> buttons =
                 [
