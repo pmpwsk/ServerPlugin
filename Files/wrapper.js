@@ -15,7 +15,7 @@ async function Update() {
                 case 200:
                     document.querySelector('#updateButton').innerText = 'Done!';
                     statusEvent.close();
-                    statusElem.innerHTML = "<h2>Server updated!</h2><p>Please refresh the page.</p>";
+                    statusElem.innerHTML = "<h2>Server updated!</h2><p>Please <a href=\"javascript:\" onclick=\"window.location.reload()\">refresh</a> the page.</p>";
                     statusElem.className = "elem red";
                     break;
                 case 418:
@@ -43,7 +43,7 @@ async function Revert() {
     }
 
     statusEvent.close();
-    statusElem.innerHTML = "<h2>Reverted to backed up version!</h2><p>Please refresh the page.</p>";
+    statusElem.innerHTML = "<h2>Reverted to backed up version!</h2><p>Please <a href=\"javascript:\" onclick=\"window.location.reload()\">refresh</a> the page.</p>";
     statusElem.className = "elem red";
 }
 
@@ -54,6 +54,6 @@ async function Restart() {
     }
 
     statusEvent.close();
-    statusElem.innerHTML = "<h2>Program restarted!</h2><p>Please refresh the page.</p>";
+    statusElem.innerHTML = "<h2>Program restarted!</h2><p>Please <a href=\"javascript:\" onclick=\"window.location.reload()\">refresh</a> the page.</p>";
     statusElem.className = "elem red";
 }
