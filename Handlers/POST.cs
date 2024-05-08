@@ -5,7 +5,7 @@ namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    public override Task Handle(UploadRequest req, string path, string pathPrefix)
+    public override Task Handle(PostRequest req, string path, string pathPrefix)
     {
         if (!req.IsAdmin())
         {
@@ -25,6 +25,7 @@ public partial class ServerPlugin : Plugin
                         Directory.Delete("../Update", true);
                     if (Directory.Exists("../UpdateTemp"))
                         Directory.Delete("../UpdateTemp", true);
+                    req.BodySizeLimit = null;
                     if (req.Files.Count != 1)
                     {
                         req.Status = 400;
@@ -40,7 +41,7 @@ public partial class ServerPlugin : Plugin
                     var file = req.Files[0];
                     if (file.FileName.EndsWith(".zip"))
                     {
-                        file.Download("../UpdateTemp.zip", 1073741824);
+                        file.Download("../UpdateTemp.zip", long.MaxValue);
                         ZipFile.ExtractToDirectory("../UpdateTemp.zip", "../UpdateTemp");
                         File.Delete("../UpdateTemp.zip");
                         if (File.Exists("../UpdateTemp/" + execName))
@@ -70,7 +71,7 @@ public partial class ServerPlugin : Plugin
                     else if (file.FileName == execName)
                     {
                         Directory.CreateDirectory("../UpdateTemp");
-                        file.Download("../UpdateTemp/" + file.FileName, 1073741824);
+                        file.Download("../UpdateTemp/" + file.FileName, long.MaxValue);
                         Directory.Move("../UpdateTemp", "../Update");
                         //update with single file
                     }
