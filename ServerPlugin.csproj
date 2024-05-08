@@ -4,26 +4,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageId>uwap.ServerPlugin</PackageId>
-    <Title>ServerPlugin</Title>
-    <Version>0.0.0.1</Version>
-    <Authors>pmpwsk</Authors>
-    <Company>uwap.org</Company>
-    <Description>Plugin for WebFramework that adds a simple interface to manage the program and server in general. </Description>
-    <Copyright>uwap.org</Copyright>
-    <PackageProjectUrl>https://uwap.org/projects/server-plugin</PackageProjectUrl>
-    <PackageIcon>u-128.png</PackageIcon>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/pmpwsk/ServerPlugin</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>plugin;server-management;wf-plugin</PackageTags>
-    <PackageReleaseNotes>https://uwap.org/changes/server-plugin</PackageReleaseNotes>
-    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Web\WebFramework\WebFramework.csproj" />
+    <ProjectReference Include="..\WebFramework\WebFramework.csproj" />
   </ItemGroup>
 
   <ItemGroup>
