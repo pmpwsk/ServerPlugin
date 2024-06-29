@@ -1,5 +1,5 @@
 let statusElem = document.querySelector("#status");
-let statusEvent = new EventSource('/event[PATH_PREFIX]/status');
+let statusEvent = new EventSource('[PATH_PREFIX]/status-event');
 onbeforeunload = (event) => { statusEvent.close(); };
 statusEvent.onmessage = function (event) {
     if (!event.data.startsWith(":")) {

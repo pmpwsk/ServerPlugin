@@ -1,7 +1,6 @@
 async function BackupNow(fresh) {
     try {
-        let response = await fetch("/api[PATH_PREFIX]/backups/new?fresh=" + fresh);
-        if (response.status === 200) {
+        if ((await fetch(`backups/new?fresh=${fresh}`, {method:"POST"})).status === 200) {
             window.location.reload();
             return;
         }
@@ -11,7 +10,7 @@ async function BackupNow(fresh) {
 }
 
 async function Restore(id) {
-    var btn = document.querySelector("#restore-" + id);
+    var btn = document.querySelector(`#restore-${id}`);
     if (btn.innerText === "Restore...")
         return;
     if (btn.innerText !== "Restore?") {
@@ -20,8 +19,7 @@ async function Restore(id) {
     }
     btn.innerText = "Restore...";
     try {
-        let response = await fetch("/api[PATH_PREFIX]/backups/restore?id=" + id);
-        if (response.status === 200) {
+        if ((await fetch(`backups/restore?id=${id}`, {method:"POST"})).status === 200) {
             window.location.reload();
             return;
         }
