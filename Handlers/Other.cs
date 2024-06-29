@@ -11,7 +11,7 @@ public partial class ServerPlugin : Plugin
             // MAIN SERVER PAGE
             case "/":
             { CreatePage(req, "Server", out var page, out var e, true);
-                page.Scripts.Add(new Script("/menu.js"));
+                page.Scripts.Add(new Script("menu.js"));
                 var heading = new LargeContainerElement("Server") { Button = new ButtonJS("Work", "Work()") };
                 e.Add(heading);
                 page.AddError();
