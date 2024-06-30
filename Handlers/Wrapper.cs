@@ -15,7 +15,7 @@ public partial class ServerPlugin : Plugin
             { CreatePage(req, "Wrapper", out var page, out var e, true);
                 if (!EnableWrapper)
                     throw new ForbiddenSignal();
-                page.Navigation.Add(new Button("Back", "..", "right"));
+                page.Navigation.Add(new Button("Back", ".", "right"));
                 page.Scripts.Add(new Script("wrapper.js"));
                 e.Add(new HeadingElement("Wrapper"));
                 page.AddError();

@@ -12,7 +12,7 @@ public partial class ServerPlugin : Plugin
             // MANAGE BACKUPS
             case "/backups":
             { CreatePage(req, "Backups", out var page, out var e, true);
-                page.Navigation.Add(new Button("Back", "..", "right"));
+                page.Navigation.Add(new Button("Back", ".", "right"));
                 if (!EnableBackups)
                     throw new ForbiddenSignal();
                 e.Add(new HeadingElement("Backups"));

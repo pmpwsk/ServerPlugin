@@ -14,7 +14,7 @@ public partial class ServerPlugin : Plugin
             { CreatePage(req, "SSH", out var page, out var e, true);
                 if (!EnableSSH)
                     throw new ForbiddenSignal();
-                page.Navigation.Add(new Button("Back", "..", "right"));
+                page.Navigation.Add(new Button("Back", ".", "right"));
                 e.Add(new HeadingElement("SSH", "You are using IPv" + ((req.Context.IP() ?? ".").Contains('.') ? "4" : "6") + "."));
                 page.Scripts.Add(Presets.SendRequestScript);
                 page.Scripts.Add(new Script("ssh.js"));

@@ -15,7 +15,7 @@ public partial class ServerPlugin : Plugin
             { CreatePage(req, "Mail", out var page, out var e, true);
                 if (!EnableMail)
                     throw new ForbiddenSignal();
-                page.Navigation.Add(new Button("Back", "..", "right"));
+                page.Navigation.Add(new Button("Back", ".", "right"));
                 page.Scripts.Add(new Script("mail.js"));
                 e.Add(new HeadingElement("Mail"));
                 e.Add(new ButtonElement("Send an email", null, "mail/send"));
