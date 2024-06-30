@@ -22,7 +22,7 @@ public partial class ServerPlugin : Plugin
         if (req.Path == "/")
             return;
 
-        page.Sidebar.Add(new ButtonElement("Menu:", null, req.PluginPathPrefix));
+        page.Sidebar.Add(new ButtonElement("Menu:", null, $"{req.PluginPathPrefix}/"));
         if (EnableWrapper)
             page.Sidebar.Add(new ButtonElement(null, "Wrapper", $"{req.PluginPathPrefix}/wrapper"));
         if (EnableSSH)
