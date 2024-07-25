@@ -6,7 +6,7 @@ namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    private async Task Mail(Request req)
+    private async Task HandleMail(Request req)
     {
         switch (req.Path)
         {

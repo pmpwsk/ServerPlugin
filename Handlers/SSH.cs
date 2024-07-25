@@ -5,7 +5,7 @@ namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    private Task SSH(Request req)
+    private Task HandleSSH(Request req)
     {
         switch (req.Path)
         {

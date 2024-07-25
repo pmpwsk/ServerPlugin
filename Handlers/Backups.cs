@@ -5,7 +5,7 @@ namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    private async Task Backups(Request req)
+    private async Task HandleBackups(Request req)
     {
         switch (req.Path)
         {

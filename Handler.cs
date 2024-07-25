@@ -7,19 +7,19 @@ public partial class ServerPlugin : Plugin
         switch (Parsers.GetFirstSegment(req.Path, out _))
         {
             case "wrapper":
-                await Wrapper(req);
+                await HandleWrapper(req);
                 break;
             case "ssh":
-                await SSH(req);
+                await HandleSSH(req);
                 break;
             case "mail":
-                await Mail(req);
+                await HandleMail(req);
                 break;
             case "backups":
-                await Backups(req);
+                await HandleBackups(req);
                 break;
             default:
-                await Other(req);
+                await HandleOther(req);
                 break;
         }
     }

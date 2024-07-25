@@ -6,7 +6,7 @@ namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    private async Task Wrapper(Request req)
+    private async Task HandleWrapper(Request req)
     {
         switch (req.Path)
         {
