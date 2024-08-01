@@ -40,7 +40,7 @@ public partial class ServerPlugin : Plugin
             case "/status-event":
             { req.ForceGET(); req.ForceAdmin(false);
                 int rebootCheckCountdown = 0;
-                while (!req.Context.RequestAborted.IsCancellationRequested)
+                while (!(req.Context.RequestAborted.IsCancellationRequested || Server.StoppingToken.IsCancellationRequested))
                 {
                     if (rebootCheckCountdown == 0)
                         rebootCheckCountdown = File.Exists("/var/run/reboot-required") ? -1 : 600;
