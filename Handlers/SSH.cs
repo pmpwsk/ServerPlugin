@@ -3,7 +3,7 @@ using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework.Plugins;
 
-public partial class ServerPlugin : Plugin
+public partial class ServerPlugin
 {
     private Task HandleSSH(Request req)
     {
@@ -21,7 +21,8 @@ public partial class ServerPlugin : Plugin
                 try
                 {
                     var ips = AllowedSshIps();
-                    if (ips.Contains(req.Context.IP()))
+                    var ip = req.Context.IP();
+                    if (ip != null && ips.Contains(ip))
                         e.Add(new ButtonElementJS("Block SSH", null, "Block()", "red"));
                     else if (ips.Any())
                         e.Add(new ButtonElementJS("Change SSH rule", null, "Change()", "red"));

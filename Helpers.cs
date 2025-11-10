@@ -3,7 +3,7 @@ using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework.Plugins;
 
-public partial class ServerPlugin : Plugin
+public partial class ServerPlugin
 {
     private void CreatePage(Request req, string title, out Page page, out List<IPageElement> e, bool addStatus)
     {
@@ -37,7 +37,7 @@ public partial class ServerPlugin : Plugin
                 button.Class = "green";
     }
 
-    private static IEnumerable<string> AllowedSshIps()
+    private static List<string> AllowedSshIps()
     {
         Process process = new();
         process.StartInfo.UseShellExecute = false;
@@ -47,12 +47,12 @@ public partial class ServerPlugin : Plugin
         process.Start();
         string output = process.StandardOutput.ReadToEnd();
         var rules = output.Split('\n').Where(x => x.StartsWith("22/tcp") && x.Contains("ALLOW"));
-        var ips = rules.Select(x => x.TrimEnd(' ')).Select(x => x.Remove(0, x.LastIndexOf(' ') + 1));
+        var ips = rules.Select(x => x.TrimEnd(' ')).Select(x => x.Remove(0, x.LastIndexOf(' ') + 1)).ToList();
         process.WaitForExit();
         return ips;
     }
 
-    private static IEnumerable<string> DeleteSshRules()
+    private static List<string> DeleteSshRules()
     {
         var ips = AllowedSshIps();
         foreach (var ip in ips)

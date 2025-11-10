@@ -1,8 +1,6 @@
-﻿using System.Diagnostics;
+﻿namespace uwap.WebFramework.Plugins;
 
-namespace uwap.WebFramework.Plugins;
-
-public partial class ServerPlugin(bool backups = true, bool ssh = true, bool mail = true, bool wrapper = true, bool wrapperLogClearing = true) : Plugin
+public partial class ServerPlugin(bool backups = true, bool ssh = true, bool mail = true, bool wrapper = true, bool wrapperLogClearing = true)
 {
     public bool EnableBackups { get; } = backups;
 

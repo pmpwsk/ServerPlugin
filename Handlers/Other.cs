@@ -2,7 +2,7 @@ using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework.Plugins;
 
-public partial class ServerPlugin : Plugin
+public partial class ServerPlugin
 {
     private async Task HandleOther(Request req)
     {

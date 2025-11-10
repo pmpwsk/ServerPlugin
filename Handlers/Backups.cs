@@ -3,7 +3,7 @@ using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework.Plugins;
 
-public partial class ServerPlugin : Plugin
+public partial class ServerPlugin
 {
     private async Task HandleBackups(Request req)
     {
@@ -23,6 +23,10 @@ public partial class ServerPlugin : Plugin
                     new ButtonJS("Normal", "BackupNow('false')", "green"),
                     new ButtonJS("Fresh", "BackupNow('true')", "green")
                 ]});
+                
+                if (!Directory.Exists(Server.Config.Backup.Directory))
+                    break;
+                
                 SortedSet<DateTime> ids = [];
                 foreach (var d in new DirectoryInfo(Server.Config.Backup.Directory).GetDirectories("*", SearchOption.TopDirectoryOnly))
                     if (long.TryParse(d.Name, out var id))

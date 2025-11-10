@@ -4,7 +4,7 @@ using uwap.WebFramework.Mail;
 
 namespace uwap.WebFramework.Plugins;
 
-public partial class ServerPlugin : Plugin
+public partial class ServerPlugin
 {
     private async Task HandleMail(Request req)
     {
