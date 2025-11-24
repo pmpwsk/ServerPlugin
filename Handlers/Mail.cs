@@ -28,7 +28,7 @@ public partial class ServerPlugin
                     throw new ForbiddenSignal();
                 try
                 {
-                    MailManager.In.Restart();
+                    await MailManager.In.RestartAsync();
                 }
                 catch (Exception ex)
                 {
@@ -66,7 +66,7 @@ public partial class ServerPlugin
                 if (!(req.Query.TryGetValue("to", out var to) && req.Query.TryGetValue("from", out var from)
                     && req.Query.TryGetValue("subject", out var subject) && req.Query.TryGetValue("text", out var text)))
                     throw new BadRequestSignal();
-                var result = MailManager.Out.Send(new MailGen(new(from, from),
+                var (result, _) = await MailManager.Out.SendAsync(new MailGen(new(from, from),
                     to.Split(' ', ',', ';').Where(x => x != "").Select(x => new MailboxAddress(x, x)),
                     subject, null, text));
                 List<string> response = [];
