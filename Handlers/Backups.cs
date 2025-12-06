@@ -1,11 +1,12 @@
 using System.IO.Compression;
 using uwap.WebFramework.Elements;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin
 {
-    private async Task HandleBackups(Request req)
+    private async Task<IResponse> HandleBackups(Request req)
     {
         switch (req.Path)
         {
@@ -14,7 +15,7 @@ public partial class ServerPlugin
             { CreatePage(req, "Backups", out var page, out var e, true);
                 page.Navigation.Add(new Button("Back", ".", "right"));
                 if (!EnableBackups)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 e.Add(new HeadingElement("Backups"));
                 page.Scripts.Add(new Script("backups.js"));
                 page.AddError();
@@ -25,7 +26,7 @@ public partial class ServerPlugin
                 ]});
                 
                 if (!Directory.Exists(Server.Config.Backup.Directory))
-                    break;
+                    return new LegacyPageResponse(page, req);
                 
                 SortedSet<DateTime> ids = [];
                 foreach (var d in new DirectoryInfo(Server.Config.Backup.Directory).GetDirectories("*", SearchOption.TopDirectoryOnly))
@@ -36,7 +37,7 @@ public partial class ServerPlugin
                     string type;
                     try
                     {
-                        type = File.ReadAllText($"{Server.Config.Backup.Directory}{id.Ticks}/BasedOn.txt") == "-" ? "Fresh" : "Based on previous";
+                        type = await File.ReadAllTextAsync($"{Server.Config.Backup.Directory}{id.Ticks}/BasedOn.txt") == "-" ? "Fresh" : "Based on previous";
                     }
                     catch
                     {
@@ -48,44 +49,46 @@ public partial class ServerPlugin
                         new ButtonJS("Restore", $"Restore('{id.Ticks}')", "red", id: $"restore-{id.Ticks}")
                     ]});
                 }
-            } break;
+                return new LegacyPageResponse(page, req);
+            }
 
             case "/backups/new":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableBackups)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 if ((!req.Query.TryGetValue("fresh", out var freshString)) || !bool.TryParse(freshString, out bool fresh))
-                    throw new BadRequestSignal();
+                    return StatusResponse.BadRequest;
                 await Server.BackupNow(fresh);
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/backups/restore":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableBackups)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 if ((!req.Query.TryGetValue("id", out var id)) || !long.TryParse(id, out _))
-                    throw new BadRequestSignal();
+                    return StatusResponse.BadRequest;
                 if (!Directory.Exists($"{Server.Config.Backup.Directory}{id}"))
-                    throw new NotFoundSignal();
+                    return StatusResponse.NotFound;
                 await Server.Restore(id);
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/backups/download":
             { req.ForceGET(); req.ForceAdmin(false);
                 if (!EnableBackups)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 if ((!req.Query.TryGetValue("id", out var id)) || !long.TryParse(id, out _))
-                    throw new BadRequestSignal();
+                    return StatusResponse.BadRequest;
                 string dir = $"{Server.Config.Backup.Directory}{id}";
                 if (!Directory.Exists(dir))
-                    throw new NotFoundSignal();
+                    return StatusResponse.NotFound;
                 string zip = $"{dir}.zip";
                 if (File.Exists(zip))
                     File.Delete(zip);
                 ZipFile.CreateFromDirectory(dir, zip, CompressionLevel.Optimal, false);
-                await req.WriteFileAsDownload(zip, $"backup-{id}.zip");
-                File.Delete(zip);
-            } break;
+                return new FileDownloadResponse(zip, $"backup-{id}.zip") { DeleteAfter = true };
+            }
 
 
 
@@ -94,18 +97,16 @@ public partial class ServerPlugin
             case "/backups/list":
             { req.ForceGET(); req.ForceAdmin(false);
                 if (!EnableBackups)
-                    throw new ForbiddenSignal();
-                await req.Write(string.Join('\n', new DirectoryInfo(Server.Config.Backup.Directory).GetDirectories("*", SearchOption.TopDirectoryOnly).Where(d => long.TryParse(d.Name, out _)).Select(d => d.Name)));
-            } break;
+                    return StatusResponse.Forbidden;
+                return new TextResponse(string.Join('\n', new DirectoryInfo(Server.Config.Backup.Directory).GetDirectories("*", SearchOption.TopDirectoryOnly).Where(d => long.TryParse(d.Name, out _)).Select(d => d.Name)));
+            }
 
 
 
 
             // 404
             default:
-                req.CreatePage("Error");
-                req.Status = 404;
-                break;
+                return StatusResponse.NotFound;
         }
     }
 }

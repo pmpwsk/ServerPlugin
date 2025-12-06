@@ -8,7 +8,7 @@ public partial class ServerPlugin
     private void CreatePage(Request req, string title, out Page page, out List<IPageElement> e, bool addStatus)
     {
         req.ForceGET();
-        req.CreatePage(title, out page, out e);
+        Presets.CreatePage(req, title, out page, out e);
         page.Head.Add($"<link rel=\"manifest\" href=\"{req.PluginPathPrefix}/manifest.json\" />");
         page.Favicon = $"{req.PluginPathPrefix}/icon.ico";
         req.ForceAdmin();
@@ -33,7 +33,7 @@ public partial class ServerPlugin
             page.Sidebar.Add(new ButtonElement(null, "Mail", $"{req.PluginPathPrefix}/mail"));
 
         foreach (IPageElement element in page.Sidebar)
-            if (element is ButtonElement button && button.Title == null && req.Context.ProtoHostPath().StartsWith(button.Link))
+            if (element is ButtonElement button && button.Title == null && req.ProtoHostPath.StartsWith(button.Link))
                 button.Class = "green";
     }
 
@@ -71,7 +71,7 @@ public partial class ServerPlugin
 
     private static string AllowSsh(Request req)
     {
-        var ip = req.Context.IP();
+        var ip = req.IP;
         if (ip == null)
             return "unknown";
         Process process = new();

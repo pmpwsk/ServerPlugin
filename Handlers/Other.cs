@@ -1,10 +1,11 @@
 using uwap.WebFramework.Elements;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin
 {
-    private async Task HandleOther(Request req)
+    private IResponse HandleOther(Request req)
     {
         switch (req.Path)
         {
@@ -26,12 +27,14 @@ public partial class ServerPlugin
                     e.Add(new ButtonElement("Backups", null, "backups"));
                 if (EnableMail)
                     e.Add(new ButtonElement("Mail", null, "mail"));
-            } break;
+                return new LegacyPageResponse(page, req);
+            }
 
             case "/work":
             { req.ForcePOST(); req.ForceAdmin(false);
                 Server.Work();
-            } break;
+                return StatusResponse.Success;
+            }
 
 
 
@@ -40,47 +43,47 @@ public partial class ServerPlugin
             case "/status-event":
             { req.ForceGET(); req.ForceAdmin(false);
                 int rebootCheckCountdown = 0;
-                while (!(req.Context.RequestAborted.IsCancellationRequested || Server.StoppingToken.IsCancellationRequested))
+                var response = new EventResponse { ConstantLoop = true };
+                response.OnTick = async () =>
                 {
                     if (rebootCheckCountdown == 0)
                         rebootCheckCountdown = File.Exists("/var/run/reboot-required") ? -1 : 600;
 
                     if (Server.BackupRunning)
-                        await req.EventMessage("<h2>A backup is being created!</h2>");
+                        await response.EventMessage("<h2>A backup is being created!</h2>");
                     else if (Server.RestoreRunning)
-                        await req.EventMessage("<h2>A backup is being restored!</h2>");
+                        await response.EventMessage("<h2>A backup is being restored!</h2>");
                     else if (Server.WorkerWorking)
-                        await req.EventMessage("<h2>Worker is working!</h2>");
+                        await response.EventMessage("<h2>Worker is working!</h2>");
                     else if (Server.WorkerNextTick == DateTime.MaxValue)
                         if (rebootCheckCountdown == -1)
-                            await req.EventMessage("<h2>Reboot required!</h2>");
-                        else await req.EventMessage("<p>Worker is disabled</p>");
+                            await response.EventMessage("<h2>Reboot required!</h2>");
+                        else await response.EventMessage("<p>Worker is disabled</p>");
                     else
                     {
                         TimeSpan timeLeft = Server.WorkerNextTick - DateTime.UtcNow;
                         int seconds = (int)Math.Round(timeLeft.TotalSeconds, 0, MidpointRounding.AwayFromZero);
                         string text = $"{seconds / 60}min {seconds % 60}s";
                         if (timeLeft < TimeSpan.FromMinutes(2))
-                            await req.EventMessage($"<h2>Worker scheduled soon!</h2><p>{text}</p>");
+                            await response.EventMessage($"<h2>Worker scheduled soon!</h2><p>{text}</p>");
                         else if (rebootCheckCountdown == -1)
-                            await req.EventMessage($"<h2>Reboot required!</h2><p>Worker scheduled in {text}</p>");
-                        else await req.EventMessage($"<p>Worker scheduled in {text}</p>");
+                            await response.EventMessage($"<h2>Reboot required!</h2><p>Worker scheduled in {text}</p>");
+                        else await response.EventMessage($"<p>Worker scheduled in {text}</p>");
                     }
 
                     if (rebootCheckCountdown > 0)
                         rebootCheckCountdown--;
                     await Task.Delay(1000);
-                }
-            } break;
+                };
+                return response;
+            }
 
 
 
 
             // 404
             default:
-                req.CreatePage("Error");
-                req.Status = 404;
-                break;
+                return StatusResponse.NotFound;
         }
     }
 }

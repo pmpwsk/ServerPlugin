@@ -1,26 +1,16 @@
+using uwap.WebFramework.Responses;
+
 namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin : Plugin
 {
-    public override async Task Handle(Request req)
-    {
-        switch (Parsers.GetFirstSegment(req.Path, out _))
+    public override Task<IResponse> HandleAsync(Request req)
+        => Parsers.GetFirstSegment(req.Path, out _) switch
         {
-            case "wrapper":
-                await HandleWrapper(req);
-                break;
-            case "ssh":
-                await HandleSSH(req);
-                break;
-            case "mail":
-                await HandleMail(req);
-                break;
-            case "backups":
-                await HandleBackups(req);
-                break;
-            default:
-                await HandleOther(req);
-                break;
-        }
-    }
+            "wrapper" => HandleWrapper(req),
+            "ssh" => HandleSSH(req),
+            "mail" => HandleMail(req),
+            "backups" => HandleBackups(req),
+            _ => Task.FromResult(HandleOther(req))
+        };
 }

@@ -1,11 +1,12 @@
 using System.Web;
 using uwap.WebFramework.Elements;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin
 {
-    private Task HandleSSH(Request req)
+    private async Task<IResponse> HandleSSH(Request req)
     {
         switch (req.Path)
         {
@@ -13,15 +14,15 @@ public partial class ServerPlugin
             case "/ssh":
             { CreatePage(req, "SSH", out var page, out var e, true);
                 if (!EnableSSH)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 page.Navigation.Add(new Button("Back", ".", "right"));
-                e.Add(new HeadingElement("SSH", "You are using IPv" + ((req.Context.IP() ?? ".").Contains('.') ? "4" : "6") + "."));
+                e.Add(new HeadingElement("SSH", "You are using IPv" + ((req.IP ?? ".").Contains('.') ? "4" : "6") + "."));
                 page.Scripts.Add(Presets.SendRequestScript);
                 page.Scripts.Add(new Script("ssh.js"));
                 try
                 {
                     var ips = AllowedSshIps();
-                    var ip = req.Context.IP();
+                    var ip = req.IP;
                     if (ip != null && ips.Contains(ip))
                         e.Add(new ButtonElementJS("Block SSH", null, "Block()", "red"));
                     else if (ips.Any())
@@ -58,35 +59,39 @@ public partial class ServerPlugin
                 {
                     e.Add(new ContainerElement(null, "Users not available!", "red"));
                 }
-            } break;
+                return new LegacyPageResponse(page, req);
+            }
 
             case "/ssh/allow":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableSSH)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 string ip = AllowSsh(req);
                 Console.WriteLine($"{req.User.Username} ({req.User.Id}) allowed SSH access to {ip}.");
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/ssh/change":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableSSH)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 var ips = DeleteSshRules();
                 string ip = AllowSsh(req);
-                if (ips.Any())
-                    Console.WriteLine($"{req.User.Username} ({req.User.Id}) changed SSH access from {Parsers.EnumerationText(ips)} to {ip}.");
-                else Console.WriteLine($"{req.User.Username} ({req.User.Id}) allowed SSH access for {ip}.");
-            } break;
+                Console.WriteLine(ips.Count != 0
+                    ? $"{req.User.Username} ({req.User.Id}) changed SSH access from {ips.EnumerationText()} to {ip}."
+                    : $"{req.User.Username} ({req.User.Id}) allowed SSH access for {ip}.");
+                return StatusResponse.Success;
+            }
 
             case "/ssh/block":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableSSH)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 var ips = DeleteSshRules();
-                if (ips.Any())
-                    Console.WriteLine($"{req.User.Username} ({req.User.Id}) removed SSH access for {Parsers.EnumerationText(ips)}.");
-            } break;
+                if (ips.Count != 0)
+                    Console.WriteLine($"{req.User.Username} ({req.User.Id}) removed SSH access for {ips.EnumerationText()}.");
+                return StatusResponse.Success;
+            }
 
 
 
@@ -95,14 +100,14 @@ public partial class ServerPlugin
             case "/ssh/user":
             { CreatePage(req, "SSH", out var page, out var e, true);
                 if (!EnableSSH)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 page.Navigation.Add(new Button("Back", "../ssh", "right"));
                 if ((!req.Query.TryGetValue("username", out string? username)) || username.Contains(".."))
-                    throw new BadRequestSignal();
+                    return StatusResponse.BadRequest;
                 string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
                 bool enabled = File.Exists(file);
                 if ((!enabled) && (!File.Exists(file + ".disabled")))
-                    throw new NotFoundSignal();
+                    return StatusResponse.NotFound;
                 page.Title = "SSH: " + username;
                 e.Add(new HeadingElement("SSH: " + username));
                 page.Scripts.Add(Presets.SendRequestScript);
@@ -112,7 +117,7 @@ public partial class ServerPlugin
                     e.Add(new ButtonElementJS("Disable SSH", null, "Disable()"));
                     e.Add(new ContainerElement("Add public key", new TextBox("Enter your public key...", null, "key", TextBoxRole.NoSpellcheck, "Add()")) { Button = new ButtonJS("Add", "Add()", "green") });
                     page.AddError();
-                    foreach (string line in File.ReadAllLines(file))
+                    foreach (string line in await File.ReadAllLinesAsync(file))
                         e.Add(new ContainerElement(line.Remove(0, line.LastIndexOf(' ')), line) { Button = new ButtonJS("Delete", $"Delete('{HttpUtility.UrlEncode(line)}')", "red") });
                 }
                 else
@@ -120,65 +125,66 @@ public partial class ServerPlugin
                     page.AddError();
                     e.Add(new ButtonElementJS("Enable SSH", null, "Enable()"));
                 }
-            } break;
+                return new LegacyPageResponse(page, req);
+            }
             
             case "/ssh/user/enable":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableSSH)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 if ((!req.Query.TryGetValue("username", out var username)) || username.Contains(".."))
-                    throw new BadRequestSignal();
+                    return StatusResponse.BadRequest;
                 string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
                 if (File.Exists(file + ".disabled"))
                     File.Move(file + ".disabled", file, true);
-                else File.WriteAllText(file, "");
+                else await File.WriteAllTextAsync(file, "");
                 Console.WriteLine($"{req.User.Username} ({req.User.Id}) enabled SSH for {username}.");
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/ssh/user/disable":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableSSH)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 if ((!req.Query.TryGetValue("username", out var username)) || username.Contains(".."))
-                    throw new BadRequestSignal();
+                    return StatusResponse.BadRequest;
                 string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
                 if (File.Exists(file))
                     File.Move(file, file + ".disabled", true);
                 Console.WriteLine($"{req.User.Username} ({req.User.Id}) disabled SSH for {username}.");
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/ssh/user/add":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableSSH)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 if ((!req.Query.TryGetValue("username", out var username)) || username.Contains("..") || !req.Query.TryGetValue("key", out var key))
-                    throw new BadRequestSignal();
+                    return StatusResponse.BadRequest;
                 string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
-                File.AppendAllLines(file, [key]);
+                await File.AppendAllLinesAsync(file, [key]);
                 Console.WriteLine($"{req.User.Username} ({req.User.Id}) added a SSH key for {username}.");
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/ssh/user/delete":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableSSH)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 if ((!req.Query.TryGetValue("username", out var username)) || username.Contains("..") || !req.Query.TryGetValue("key", out var key))
-                    throw new BadRequestSignal();
+                    return StatusResponse.BadRequest;
                 string file = (username == "root" ? "/root" : $"/home/{username}") + "/.ssh/authorized_keys";
-                File.WriteAllLines(file, File.ReadAllLines(file).Where(x => x != key));
+                await File.WriteAllLinesAsync(file, (await File.ReadAllLinesAsync(file)).Where(x => x != key));
                 Console.WriteLine($"{req.User.Username} ({req.User.Id}) removed a SSH key for {username}.");
-            } break;
+                return StatusResponse.Success;
+            }
 
 
 
 
             // 404
             default:
-                req.CreatePage("Error");
-                req.Status = 404;
-                break;
+                return StatusResponse.NotFound;
         }
-
-        return Task.CompletedTask;
     }
 }

@@ -1,12 +1,13 @@
 using System.Diagnostics;
 using System.IO.Compression;
 using uwap.WebFramework.Elements;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework.Plugins;
 
 public partial class ServerPlugin
 {
-    private async Task HandleWrapper(Request req)
+    private async Task<IResponse> HandleWrapper(Request req)
     {
         switch (req.Path)
         {
@@ -14,7 +15,7 @@ public partial class ServerPlugin
             case "/wrapper":
             { CreatePage(req, "Wrapper", out var page, out var e, true);
                 if (!EnableWrapper)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 page.Navigation.Add(new Button("Back", ".", "right"));
                 page.Scripts.Add(new Script("wrapper.js"));
                 e.Add(new HeadingElement("Wrapper"));
@@ -25,49 +26,57 @@ public partial class ServerPlugin
                 e.Add(new ButtonElementJS("Restart program", null, "Restart()"));
                 e.Add(new ButtonElementJS("Stop program", null, "Stop()", id: "stopButton"));
                 e.Add(new ButtonElementJS("Reload Wrapper config", null, "ReloadConfig()"));
-            } break;
+                return new LegacyPageResponse(page, req);
+            }
 
             case "/wrapper/revert":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableWrapper)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 Console.WriteLine("wrapper rollback");
                 Server.Exit(false);
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/wrapper/restart":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableWrapper)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 Server.Exit(false);
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/wrapper/stop":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableWrapper)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 Server.Exit(true);
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/wrapper/reload-config":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableWrapper)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 Console.WriteLine("wrapper reload-config");
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/wrapper/update":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableWrapper)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 if (Directory.Exists("../Update"))
                     Directory.Delete("../Update", true);
                 if (Directory.Exists("../UpdateTemp"))
                     Directory.Delete("../UpdateTemp", true);
                 req.BodySizeLimit = null;
                 if (req.Files.Count != 1)
-                    throw new BadRequestSignal();
-                string execName = ((Process.GetCurrentProcess().MainModule?.FileName) ?? throw new HttpStatusSignal(503)).Split('/', '\\').Last();
+                    return StatusResponse.BadRequest;
+                var execPath = Process.GetCurrentProcess().MainModule?.FileName;
+                if (execPath == null)
+                    return StatusResponse.ServiceUnavailable;
+                string execName = execPath.Split('/', '\\').Last();
                 var file = req.Files[0];
                 if (file.FileName.EndsWith(".zip"))
                 {
@@ -93,7 +102,7 @@ public partial class ServerPlugin
                         else
                         {
                             Directory.Delete("../UpdateTemp", true);
-                            throw new HttpStatusSignal(418);
+                            return StatusResponse.Teapot;
                         }
                     }
                 }
@@ -104,11 +113,13 @@ public partial class ServerPlugin
                     Directory.Move("../UpdateTemp", "../Update");
                     //update with single file
                 }
-                else throw new HttpStatusSignal(418);
+                else
+                    return StatusResponse.Teapot;
 
                 Console.WriteLine($"{req.User.Username} ({req.User.Id}) uploaded an update.");
                 Server.Exit(false);
-            } break;
+                return StatusResponse.Success;
+            }
 
 
 
@@ -117,7 +128,7 @@ public partial class ServerPlugin
             case "/wrapper/log":
             { CreatePage(req, "Log", out var page, out var e, false);
                 if (!EnableWrapper)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 page.Navigation.Add(new Button("Back", "../wrapper", "right"));
                 bool wide = req.Query.TryGet("wide") == "true";
                 page.Scripts.Add(new Script("log.js"));
@@ -126,7 +137,7 @@ public partial class ServerPlugin
                 List<IContent> contents = [];
                 if (File.Exists("../Wrapper.log"))
                 {
-                    foreach (string line in File.ReadAllLines("../Wrapper.log"))
+                    foreach (string line in await File.ReadAllLinesAsync("../Wrapper.log"))
                         contents.Add(new Paragraph(line.HtmlSafe()));
                     page.Scripts.Add(new CustomScript($"let logEvent = new EventSource('log-event?t={File.GetLastWriteTimeUtc("../Wrapper.log").Ticks}');\nonbeforeunload = (event) => {{ logEvent.close(); }};\nlogEvent.onmessage = function (event) {{\n\tif (event.data === 'refresh')\n\t\twindow.location.reload();\n}};"));
                 }
@@ -139,57 +150,54 @@ public partial class ServerPlugin
                 if (EnableWrapperLogClearing)
                     buttons.Add(new ButtonJS("Clear", "Clear()", "red"));
                 e.Add(new LargeContainerElement("Log", contents) { Buttons = buttons });
-            } break;
+                return new LegacyPageResponse(page, req);
+            }
 
             case "/wrapper/log-event":
             { req.ForceGET(); req.ForceAdmin(false);
                 if (!EnableWrapper)
-                    throw new ForbiddenSignal();
-                if (!req.Query.TryGetValue("t", out long t))
-                    throw new BadMethodSignal();
+                    return StatusResponse.Forbidden;
+                var t = req.Query.GetOrThrow<long>("t");
                 int countdown = 0;
-                while (!req.Context.RequestAborted.IsCancellationRequested)
+                var response = new EventResponse();
+                response.OnTick = async () =>
                 {
                     if (countdown == 0)
                     {
                         if (File.GetLastWriteTimeUtc("../Wrapper.log").Ticks != t)
                         {
                             await Task.Delay(2000);
-                            await req.EventMessage("refresh");
-                            await req.KeepEventAlive();
+                            await response.EventMessage("refresh");
                         }
                         countdown = 20;
                     }
 
                     countdown--;
-                    await req.EventMessage(":keepalive");
-                    await Task.Delay(30000);
-                }
-            } break;
+                };
+                return response;
+            }
             
             case "/wrapper/clear-log":
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableWrapperLogClearing)
-                    throw new ForbiddenSignal();
+                    return StatusResponse.Forbidden;
                 Console.WriteLine("wrapper log-clear");
-            } break;
+                return StatusResponse.Success;
+            }
 
             case "/wrapper/log-raw":
             { req.ForceGET(); req.ForceAdmin();
                 if (!EnableWrapper)
-                    throw new ForbiddenSignal();
-                req.Context.Response.ContentType = "text/plain;charset=utf-8";
-                await req.WriteFile("../Wrapper.log");
-            } break;
+                    return StatusResponse.Forbidden;
+                return new FileResponse("../Wrapper.log", false, null);
+            }
 
 
 
 
             // 404
             default:
-                req.CreatePage("Error");
-                req.Status = 404;
-                break;
+                return StatusResponse.NotFound;
         }
     }
 }
