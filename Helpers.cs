@@ -71,7 +71,7 @@ public partial class ServerPlugin
 
     private static string AllowSsh(Request req)
     {
-        var ip = req.IP;
+        var ip = req.ClientAddress;
         if (ip == null)
             return "unknown";
         Process process = new();

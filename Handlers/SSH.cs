@@ -16,13 +16,13 @@ public partial class ServerPlugin
                 if (!EnableSSH)
                     return StatusResponse.Forbidden;
                 page.Navigation.Add(new Button("Back", ".", "right"));
-                e.Add(new HeadingElement("SSH", "You are using IPv" + ((req.IP ?? ".").Contains('.') ? "4" : "6") + "."));
+                e.Add(new HeadingElement("SSH", "You are using IPv" + ((req.ClientAddress ?? ".").Contains('.') ? "4" : "6") + "."));
                 page.Scripts.Add(Presets.SendRequestScript);
                 page.Scripts.Add(new Script("ssh.js"));
                 try
                 {
                     var ips = AllowedSshIps();
-                    var ip = req.IP;
+                    var ip = req.ClientAddress;
                     if (ip != null && ips.Contains(ip))
                         e.Add(new ButtonElementJS("Block SSH", null, "Block()", "red"));
                     else if (ips.Any())
