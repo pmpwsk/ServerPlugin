@@ -66,18 +66,20 @@ public partial class ServerPlugin
             { req.ForcePOST(); req.ForceAdmin(false);
                 if (!EnableWrapper)
                     return StatusResponse.Forbidden;
+                if (req.Form == null)
+                    return StatusResponse.BadRequest;
                 if (Directory.Exists("../Update"))
                     Directory.Delete("../Update", true);
                 if (Directory.Exists("../UpdateTemp"))
                     Directory.Delete("../UpdateTemp", true);
                 req.BodySizeLimit = null;
-                if (req.Files.Count != 1)
+                if (req.Form.Files.Count != 1)
                     return StatusResponse.BadRequest;
                 var execPath = Process.GetCurrentProcess().MainModule?.FileName;
                 if (execPath == null)
                     return StatusResponse.ServiceUnavailable;
                 string execName = execPath.Split('/', '\\').Last();
-                var file = req.Files[0];
+                var file = req.Form.Files[0];
                 if (file.FileName.EndsWith(".zip"))
                 {
                     file.Download("../UpdateTemp.zip", long.MaxValue);
