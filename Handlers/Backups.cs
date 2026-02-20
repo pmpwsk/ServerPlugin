@@ -87,7 +87,7 @@ public partial class ServerPlugin
                 if (File.Exists(zip))
                     File.Delete(zip);
                 ZipFile.CreateFromDirectory(dir, zip, CompressionLevel.Optimal, false);
-                return new FileDownloadResponse(zip, $"backup-{id}.zip") { DeleteAfter = true };
+                return new FileDownloadResponse(zip, $"backup-{id}.zip", DateTime.UtcNow.Ticks.ToString()) { DeleteAfter = true };
             }
 
 
