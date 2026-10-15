@@ -1,14 +1,16 @@
 ﻿namespace uwap.WebFramework.Plugins;
 
-public partial class ServerPlugin(bool backups = true, bool ssh = true, bool mail = true, bool wrapper = true, bool wrapperLogClearing = true)
+public partial class ServerPlugin
 {
-    public bool EnableBackups { get; } = backups;
+    public bool EnableBackups { get; set; } = true;
 
-    public bool EnableSSH { get; } = ssh;
+    public bool EnableSSH { get; set; } = true;
 
-    public bool EnableMail { get; } = mail;
+    public bool EnableMail { get; set; } = true;
 
-    public bool EnableWrapper { get; } = wrapper;
+    public bool EnableWrapper { get; set; } = true;
 
-    public bool EnableWrapperLogClearing { get; } = wrapperLogClearing;
+    public bool EnableWrapperLogClearing { get; set; } = true;
+
+    public bool EnableMemory { get; set; } = true;
 }

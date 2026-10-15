@@ -27,6 +27,8 @@ public partial class ServerPlugin
                     e.Add(new ButtonElement("Backups", null, "backups"));
                 if (EnableMail)
                     e.Add(new ButtonElement("Mail", null, "mail"));
+                if (EnableMemory)
+                    e.Add(new ButtonElement("Memory usage", null, "memory"));
                 return new LegacyPageResponse(page, req);
             }
 
